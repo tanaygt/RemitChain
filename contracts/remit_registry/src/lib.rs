@@ -60,6 +60,11 @@ pub enum DataKey {
     NextId,
     Remittance(u64),
     SenderIds(Address),
+    FeeVault,
+}
+
+mod vault {
+    soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/fee_vault.wasm");
 }
 
 fn read_admin(env: &Env) -> Address {
@@ -115,6 +120,13 @@ impl RemitRegistryContract {
         env.storage().instance().set(&DataKey::NextId, &1_u64);
     }
 
+    pub fn set_vault(env: Env, vault: Address) {
+        let admin = read_admin(&env);
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::FeeVault, &vault);
+        env.events().publish((symbol_short!("vault"), symbol_short!("set")), vault);
+    }
+
     pub fn create_remittance(
         env: Env,
         sender: Address,
@@ -155,6 +167,12 @@ impl RemitRegistryContract {
 
         env.events()
             .publish((symbol_short!("created"), id), remittance.clone());
+
+        if env.storage().instance().has(&DataKey::FeeVault) {
+            let vault_id: Address = env.storage().instance().get(&DataKey::FeeVault).unwrap();
+            let vault_client = vault::Client::new(&env, &vault_id);
+            vault_client.deposit_fees(&1u128); // Charge 1 unit fee
+        }
 
         id
     }
