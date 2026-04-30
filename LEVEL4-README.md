@@ -1,66 +1,133 @@
-# Level 4 - Green Belt Submission
+# RemitChain Level 4 - Green Belt
 
-## Overview
+Level 4 turns RemitChain into a production-ready Soroban dApp with real testnet USDC escrow, inter-contract fee accounting, stronger dashboard UX, and CI coverage.
 
-RemitChain Level 4 represents the project's evolution into a production-grade decentralized application. This level focuses on advanced smart contract patterns, specifically **inter-contract communication**, combined with professional DevOps practices and mobile-first design.
+## What changed in Level 4
 
-## Key Features
+- real testnet `USDC` funded remittances through the Stellar Asset Contract
+- `RemitRegistry` contract for funded remittance creation, completion, and refunds
+- `FeeVault` contract for protocol fee accounting through an inter-contract call
+- linked event feed for registry and fee events
+- upgraded dashboard with XLM + USDC balances, trustline awareness, and funded remittance forms
+- GitHub Actions CI for frontend and Soroban contracts
+- mobile-friendly dashboard layout for the larger Level 4 surface area
 
-### 1. Inter-Contract Communication
-We have implemented a dual-contract architecture to separate core business logic from protocol accounting:
-- **RemitRegistry Contract**: Handles user remittances and state.
-- **FeeVault Contract**: A standalone contract that receives and tracks protocol fees.
-- **The Call**: Every time a remittance is created via `RemitRegistry`, it automatically invokes the `FeeVault.deposit_fees()` method.
+## Live app
 
-### 2. CI/CD Implementation
-A full CI/CD pipeline has been established using **GitHub Actions** (`.github/workflows/ci.yml`).
-- **Frontend Quality**: Automatically runs linting, unit tests (Vitest), and builds on every push.
-- **Contract Verification**: Validates contract compilation and tests using the Soroban environment.
+- [https://remitchain.vercel.app/](https://remitchain.vercel.app/)
+- **Demo Video**: [https://www.loom.com/share/af0d67a7005d4f95abc7edc756c56e0e](https://www.loom.com/share/af0d67a7005d4f95abc7edc756c56e0e)
 
-### 3. Mobile Responsive Design
-The RemitChain Dashboard has been overhauled with a mobile-first approach:
-- **Fluid Grids**: Uses a responsive grid system that stacks seamlessly on smaller screens.
-- **Optimized Components**: Form inputs, action buttons, and activity cards are scaled for touch interaction.
+## Demo flow
 
-### 4. Production Readiness
-- **Event Synchronization**: Updated event listeners to track both registry and fee-vault events.
-- **Error Tracking**: Enhanced mapping for inter-contract call failures and RPC range errors.
+- connect wallet with `StellarWalletsKit`
+- confirm testnet USDC trustline
+- fund a USDC remittance escrow
+- view the fee vault side effect and event feed
+- complete the remittance from the admin/recipient panel
 
-## Deployed Artifacts
+## Level 4 contracts
 
-| Contract | Address |
-|---|---|
-| **Remittance Registry** | `CCLUDU2DFAJ7H3UCHHCMPVN2ASRNKP3V3UWIMWC5MEUGTVNJ2IQ3EEPS` |
-| **Fee Vault (Accounting)** | `CAQXP3J4...` (Inter-contract Target) |
+- Registry contract:
+  - `CCLUDU2DFAJ7H3UCHHCMPVN2ASRNKP3V3UWIMWC5MEUGTVNJ2IQ3EEPS`
+- FeeVault contract:
+  - `CBRAYXE2MCTP5MBDPT3CQNFARYVEYWQLMALVTWEYFUS6LBCQTAPIEK2T`
+- Testnet USDC SAC:
+  - `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`
 
-## Requirement Mapping
+## Testnet transactions
 
-- [x] **Inter-contract call working**: `RemitRegistry` -> `FeeVault` integration.
-- [x] **CI/CD running**: GitHub Actions workflow active.
-- [x] **Mobile responsive**: Optimized CSS for mobile/tablet.
-- [x] **Minimum 8+ meaningful commits**: Full development history preserved.
+- FeeVault deployment:
+  - [b598b47e6a26a0a6fe73410fe1de6bf0d616bb4b2d71006bd1547590bf8a2c50](https://stellar.expert/explorer/testnet/tx/b598b47e6a26a0a6fe73410fe1de6bf0d616bb4b2d71006bd1547590bf8a2c50)
+- Registry deployment:
+  - [ffb634147358bdd45b6717947299b3812fc7a1efb14541c585c9bf4de4a21a14](https://stellar.expert/explorer/testnet/tx/ffb634147358bdd45b6717947299b3812fc7a1efb14541c585c9bf4de4a21a14)
+- Funded remittance create + inter-contract fee record:
+  - [1507525771707cd038fd6e88c72730d22e2e31324512328a069d3aa4b4258890](https://stellar.expert/explorer/testnet/tx/1507525771707cd038fd6e88c72730d22e2e31324512328a069d3aa4b4258890)
 
-## Screenshots
+## 📸 Technical Proofs
 
-### Mobile Responsive Design
-The dashboard adapted for mobile devices, showing stacked stats and the remittance form.
+### 1. CI/CD Success
 
-![Mobile View](./frontend/public/screenshots/mobile.png)
+[![RemitChain CI](https://github.com/tanaygt/RemitChain/actions/workflows/ci.yml/badge.svg)](https://github.com/tanaygt/RemitChain/actions/workflows/ci.yml)
 
-### CI/CD Pipeline
-GitHub Actions status showing successful builds and tests.
+### 2. Mobile Responsive View
 
-![CI Status](https://github.com/tanaygt/RemitChain/actions/workflows/ci.yml/badge.svg)
+![RemitChain Mobile Responsive View](./frontend/public/screenshots/mobileview.png)
 
----
+### 3. Contract Interactions (RPC Events)
 
-## Local Setup
+![RemitChain Create Remittance Contract Interaction](./frontend/public/screenshots/level4%20transctaion.png)
+
+## Requirement coverage
+
+### Inter-contract call working
+
+Yes.
+
+- `RemitRegistry.create_remittance()` triggers a fee record in `FeeVault`
+- `RemitRegistry` calls `FeeVault.deposit_fees()` inside the same contract flow
+- the funded remittance transaction above proves the inter-contract path on testnet
+
+### Custom token or pool deployed
+
+RemitChain Level 4 uses real testnet `USDC` for remittance funding and a deployed `FeeVault` for fee share accounting.
+
+- payment asset is not a mock token
+- fee accounting is handled in a separate deployed contract
+
+### CI/CD running
+
+- workflow file:
+  - [\.github/workflows/ci.yml](./.github/workflows/ci.yml)
+- checks:
+  - frontend lint
+  - frontend tests
+  - frontend build
+  - Soroban contract build
+
+### Mobile responsive
+
+Yes.
+
+- the dashboard stacks metrics, forms, and activity cards cleanly on smaller breakpoints
+- components collapse into a single-column mobile layout for better accessibility
+
+## Local setup
 
 ```bash
-cd frontend
 npm install
 npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Contract development
+
+Run frontend checks:
+
+```bash
+npm run lint
+npm test
+npm run build
+```
+
+Build Soroban contracts:
+
+```bash
+stellar contract build
+```
+
+## Testnet USDC note
+
+Level 4 uses the official Stellar testnet USDC asset:
+
+- asset:
+  - `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`
+
+Before creating a funded remittance from the UI:
+
+- add the `USDC` trustline
+- fund the wallet with testnet USDC
+- then use the dashboard remittance form
 
 ---
 

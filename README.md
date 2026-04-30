@@ -1,11 +1,12 @@
 # RemitChain ⚡
 
+[![RemitChain CI](https://github.com/tanaygt/RemitChain/actions/workflows/ci.yml/badge.svg)](https://github.com/tanaygt/RemitChain/actions/workflows/ci.yml)
 [![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-63b3ed?style=flat-square)](https://stellar.expert/explorer/testnet)
 [![Soroban](https://img.shields.io/badge/Soroban-Deployed-4fd1c5?style=flat-square)](https://developers.stellar.org/docs/build/smart-contracts/overview)
 [![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?style=flat-square)](https://remitchain.vercel.app)
 
 > **Stellar + Soroban dApp for modern, tracked remittances.**
-> Connect a wallet, send payments, and track contract-backed remittance records with real-time event synchronization.
+> Connect a wallet, fund an escrow, and track contract-backed remittance records with real-time event synchronization.
 
 **Live App** → [https://remitchain.vercel.app](https://remitchain.vercel.app)
 **Demo Video** → [https://www.loom.com/share/af0d67a7005d4f95abc7edc756c56e0e](https://www.loom.com/share/af0d67a7005d4f95abc7edc756c56e0e)
@@ -19,7 +20,7 @@
 - [Level 1 — White Belt](#level-1--white-belt)
 - [Level 2 — Yellow Belt](#level-2--yellow-belt)
 - [Level 3 — Orange Belt](#level-3--orange-belt)
-- [Level 4 — Green Belt (Planned)](#level-4--green-belt-planned)
+- [Level 4 — Green Belt](#level-4--green-belt)
 - [Tech Stack](#tech-stack)
 - [Local Setup](#local-setup)
 - [Contract Development](#contract-development)
@@ -28,7 +29,7 @@
 
 ## What is RemitChain?
 
-Traditional remittances are often "send and forget," leaving users in the dark about the exact status of their funds. **RemitChain** is a belt-by-belt Stellar dApp that evolves from a basic XLM payment tool into a full Soroban remittance registry platform with real-time tracking and production-ready caching.
+Traditional blockchain payments are one-shot transfers. That creates friction for users who need small repeated payments instead of lump sums. **RemitChain** is a belt-by-belt Stellar dApp that evolves from a basic XLM payment tool into a full Soroban USDC escrow platform with inter-contract fee accounting, real-time event sync, and production CI/CD.
 
 ---
 
@@ -121,11 +122,44 @@ npm test
 
 ---
 
-## Level 4 — Green Belt (Planned)
+## Level 4 — Green Belt
 
 **Real USDC escrow, inter-contract fee vault, CI/CD, mobile responsive.**
 
 RemitChain becomes a production-ready dApp. USDC is escrowed in a Soroban contract, protocol fees are routed to a separate FeeVault contract via an inter-contract call, and recipients withdraw earned balance on demand.
+
+**Live App** → [https://remitchain.vercel.app](https://remitchain.vercel.app)
+
+**What was built:**
+- Real testnet USDC funded remittances via Stellar Asset Contract (SAC)
+- `RemitRegistry` contract — create, complete, refund
+- `FeeVault` contract — protocol fee accounting via inter-contract call
+- Dashboard: XLM + USDC balances, trustline awareness, funded remittance forms
+- Linked registry + fee event feed
+- GitHub Actions CI (frontend lint, tests, build + Soroban contract build)
+- Mobile-responsive dashboard layout
+
+**Deployed contracts:**
+
+| Contract | Address |
+|---|---|
+| RemitRegistry | `CCLUDU2DFAJ7H3UCHHCMPVN2ASRNKP3V3UWIMWC5MEUGTVNJ2IQ3EEPS` |
+| FeeVault | `CBRAYXE2MCTP5MBDPT3CQNFARYVEYWQLMALVTWEYFUS6LBCQTAPIEK2T` |
+| Testnet USDC SAC | `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA` |
+
+**On-chain proof:**
+
+| Event | Transaction |
+|---|---|
+| FeeVault deployment | [b598b47e...c2c50](https://stellar.expert/explorer/testnet/tx/b598b47e6a26a0a6fe73410fe1de6bf0d616bb4b2d71006bd1547590bf8a2c50) |
+| RemitRegistry deployment | [ffb63414...21a14](https://stellar.expert/explorer/testnet/tx/ffb634147358bdd45b6717947299b3812fc7a1efb14541c585c9bf4de4a21a14) |
+| Funded remittance + inter-contract fee | [15075257...58890](https://stellar.expert/explorer/testnet/tx/1507525771707cd038fd6e88c72730d22e2e31324512328a069d3aa4b4258890) |
+
+**Screenshots:**
+
+| Mobile Responsive | Contract Interactions (RPC Events) |
+|---|---|
+| ![Mobile](./frontend/public/screenshots/mobileview.png) | ![Create Remittance](./frontend/public/screenshots/level4%20transctaion.png) |
 
 ---
 
@@ -139,7 +173,8 @@ RemitChain becomes a production-ready dApp. USDC is escrowed in a Soroban contra
 | Smart contracts | Rust, Soroban SDK 26 |
 | RPC | Soroban testnet RPC (`soroban-testnet.stellar.org`) |
 | Horizon | Stellar Testnet Horizon |
-| Testing | Vitest |
+| Testing | Vitest (frontend) |
+| CI/CD | GitHub Actions |
 | Deployment | Vercel |
 
 ---
@@ -162,8 +197,14 @@ Open [http://localhost:3000](http://localhost:3000).
 **Build contracts:**
 
 ```bash
-cd contracts/remit_registry
 stellar contract build
+```
+
+**Run frontend tests:**
+
+```bash
+cd frontend
+npm test
 ```
 
 **Contract source files:**
@@ -171,6 +212,7 @@ stellar contract build
 | Contract | Source |
 |---|---|
 | Remittance Registry | `contracts/remit_registry/src/lib.rs` |
+| FeeVault | `contracts/fee_vault/src/lib.rs` |
 
 ---
 
