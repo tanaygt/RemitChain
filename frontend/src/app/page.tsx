@@ -14,6 +14,8 @@ export default function LandingPage() {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   useEffect(() => {
     if (typeof window !== 'undefined' && !window.Buffer) {
       (window as Window & { Buffer?: typeof Buffer }).Buffer = Buffer;
@@ -46,30 +48,87 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/85">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-          <div className="brand-mark">RemitChain</div>
-          <div className="flex items-center gap-3 sm:gap-5">
-            <a
-              href="#features"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-primary dark:text-slate-400"
-            >
-              Features
-            </a>
-            <a
-              href="#how-it-works"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-primary dark:text-slate-400"
-            >
-              How It Works
-            </a>
-            <button
-              onClick={handleConnectWallet}
-              disabled={isBusy}
-              className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition-all hover:bg-primary-dark disabled:opacity-50"
-            >
-              {isBusy ? 'Opening...' : 'Connect Wallet'}
-            </button>
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="flex h-16 items-center justify-between">
+            <div className="brand-mark">RemitChain</div>
+            
+            {/* Desktop Menu */}
+            <div className="hidden items-center gap-8 md:flex">
+              <a
+                href="#features"
+                className="text-sm font-medium text-slate-600 transition-colors hover:text-primary dark:text-slate-400"
+              >
+                Features
+              </a>
+              <a
+                href="#how-it-works"
+                className="text-sm font-medium text-slate-600 transition-colors hover:text-primary dark:text-slate-400"
+              >
+                How It Works
+              </a>
+              <button
+                onClick={handleConnectWallet}
+                disabled={isBusy}
+                className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/20 disabled:opacity-50"
+              >
+                {isBusy ? 'Opening...' : 'Connect Wallet'}
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex md:hidden">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="inline-flex items-center justify-center rounded-md p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-500 focus:outline-none dark:hover:bg-slate-800"
+              >
+                <span className="sr-only">Open main menu</span>
+                {isMenuOpen ? (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Menu Content */}
+        {isMenuOpen && (
+          <div className="border-t border-slate-200 bg-white md:hidden dark:border-slate-800 dark:bg-slate-900">
+            <div className="space-y-1 px-2 pt-2 pb-3">
+              <a
+                href="#features"
+                onClick={() => setIsMenuOpen(false)}
+                className="block rounded-md px-3 py-4 text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-primary dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                Features
+              </a>
+              <a
+                href="#how-it-works"
+                onClick={() => setIsMenuOpen(false)}
+                className="block rounded-md px-3 py-4 text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-primary dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                How It Works
+              </a>
+              <div className="px-3 py-4">
+                <button
+                  onClick={() => {
+                    handleConnectWallet();
+                    setIsMenuOpen(false);
+                  }}
+                  disabled={isBusy}
+                  className="w-full rounded-xl bg-primary px-4 py-3 text-center text-base font-bold text-white transition-all hover:bg-primary-dark disabled:opacity-50"
+                >
+                  {isBusy ? 'Opening...' : 'Connect Wallet'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       <section className="relative overflow-hidden">

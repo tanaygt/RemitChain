@@ -229,32 +229,33 @@ export default function Dashboard() {
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-900 sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-md px-4 py-3 dark:border-slate-800 dark:bg-slate-900/90 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <div className="flex items-center gap-4">
             <div className="brand-mark cursor-pointer" onClick={() => router.push('/')}>
               RemitChain
             </div>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Payment Tracker Dashboard {isRefreshing && <span className="animate-pulse text-primary ml-2">Syncing...</span>}
-            </p>
+            <div className="hidden sm:block">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Dashboard {isRefreshing && <span className="animate-pulse text-primary ml-2">Syncing...</span>}
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                Connected Wallet
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="hidden rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950 md:block">
+              <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                Wallet
               </div>
-              <div className="mt-1 font-semibold">{walletLabel}</div>
-              <div className="truncate text-xs text-slate-500">
+              <div className="truncate font-semibold max-w-[120px]">
                 {wallet?.address
-                  ? `${wallet.address.slice(0, 8)}...${wallet.address.slice(-8)}`
+                  ? `${wallet.address.slice(0, 4)}...${wallet.address.slice(-4)}`
                   : '...'}
               </div>
             </div>
             <button
               onClick={handleDisconnect}
-              className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-500 transition-all hover:border-danger/30 hover:text-danger dark:border-slate-800"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-500 transition-all hover:border-danger/30 hover:bg-danger/5 hover:text-danger dark:border-slate-800 dark:bg-slate-900"
             >
               Disconnect
             </button>
