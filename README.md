@@ -8,6 +8,7 @@
 > Connect a wallet, send payments, and track contract-backed remittance records with real-time event synchronization.
 
 **Live App** → [https://remitchain.vercel.app](https://remitchain.vercel.app)
+**Demo Video** → [https://www.loom.com/share/af0d67a7005d4f95abc7edc756c56e0e](https://www.loom.com/share/af0d67a7005d4f95abc7edc756c56e0e)
 **GitHub** → [https://github.com/tanaygt/RemitChain](https://github.com/tanaygt/RemitChain)
 
 ---
@@ -17,6 +18,8 @@
 - [What is RemitChain?](#what-is-remitchain)
 - [Level 1 — White Belt](#level-1--white-belt)
 - [Level 2 — Yellow Belt](#level-2--yellow-belt)
+- [Level 3 — Orange Belt](#level-3--orange-belt)
+- [Level 4 — Green Belt (Planned)](#level-4--green-belt-planned)
 - [Tech Stack](#tech-stack)
 - [Local Setup](#local-setup)
 - [Contract Development](#contract-development)
@@ -25,7 +28,7 @@
 
 ## What is RemitChain?
 
-Traditional remittances are often "send and forget." **RemitChain** is a belt-by-belt Stellar dApp that evolves from a basic XLM payment tool into a full Soroban remittance platform with real-time tracking, contract-backed status, and live event synchronization.
+Traditional remittances are often "send and forget," leaving users in the dark about the exact status of their funds. **RemitChain** is a belt-by-belt Stellar dApp that evolves from a basic XLM payment tool into a full Soroban remittance registry platform with real-time tracking and production-ready caching.
 
 ---
 
@@ -46,7 +49,7 @@ Covers the core Stellar fundamentals — Freighter wallet connect/disconnect, XL
 
 | Balance + In-App Result | Transaction on Stellar Expert |
 |---|---|
-| ![Balance](./frontend/public/screenshots/wallet%20and%20balance.png) <br> *Dashboard showing connected wallet and real-time XLM balance.* | ![Explorer](./frontend/public/screenshots/transaction.png) <br> *External verification of the XLM transfer on Stellar Expert.* |
+| ![Balance](./frontend/public/screenshots/wallet%20and%20balance.png) | ![Explorer](./frontend/public/screenshots/transaction.png) |
 
 ---
 
@@ -62,7 +65,7 @@ Moved from Freighter-only to StellarWalletsKit, deployed a real remittance regis
 - `create_remittance` from the frontend
 - Contract reads: total count, pending/completed stats, recent activities
 - Event feed polling from Soroban RPC
-- Explicit error handling: wallet unavailable, user rejected, insufficient balance, BigInt serialization, and RPC range errors.
+- Explicit error handling: wallet unavailable, user rejected, insufficient balance
 
 **Deployed contract:**
 
@@ -79,20 +82,50 @@ CCLUDU2DFAJ7H3UCHHCMPVN2ASRNKP3V3UWIMWC5MEUGTVNJ2IQ3EEPS
 
 **Screenshots:**
 
-#### Multi-wallet Integration
-The application now supports multiple Stellar wallets via StellarWalletsKit, allowing users to choose their preferred provider.
+| Multi-wallet Popup | Contract Dashboard | Contract Call (Expert) |
+|---|---|---|
+| ![Multiwallet](./frontend/public/screenshots/walletkit.png) | ![Dashboard](./frontend/public/screenshots/dashboard%20contract%20succesfull%20call.png) | ![Contract Call](./frontend/public/screenshots/contract%20call%20explorer.png) |
 
-![Multiwallet](./frontend/public/screenshots/walletkit.png)
+---
 
-#### Successful Contract Interaction
-After signing the transaction, the dashboard provides immediate feedback. The screenshot below shows the successful "Contract remittance confirmed" state and the updated activity feed.
+## Level 3 — Orange Belt
 
-![Dashboard](./frontend/public/screenshots/dashboard%20contract%20succesfull%20call.png)
+**Caching, loading states, automated tests, and demo-ready quality.**
 
-#### On-chain Verification (Soroban)
-Verification of the `create_remittance` function call on the Stellar Expert explorer, showing the contract ID and passed parameters.
+Upgraded RemitChain into a polished mini-dApp with dashboard state caching, progress indicators during wallet restore and live sync, and automated test coverage.
 
-![Contract Call](./frontend/public/screenshots/contract%20call%20explorer.png)
+**What was built:**
+- `localStorage` cache for statistics and recent Soroban events
+- Loading states and "Syncing..." pulse indicators for background refreshes
+- 6 automated tests — utility logic, cache parsing, XLM/stroops conversion
+- Complete README and submission ready structure
+
+**Test command:**
+
+```bash
+cd frontend
+npm test
+```
+
+**On-chain proof:**
+
+| Event | Transaction |
+|---|---|
+| Registry Interaction | [fa3e568c...2830278b](https://stellar.expert/explorer/testnet/tx/b925b292fa12de239619b1dfdd7a40d4de218ae1de586310dc9adcdc2830278b) |
+
+**Screenshots:**
+
+| Test Output (6 passing) | Successful Call Feedback |
+|---|---|
+| ![Tests](./frontend/public/screenshots/test.png) | ![Dashboard](./frontend/public/screenshots/contract%20call%20level3.png) |
+
+---
+
+## Level 4 — Green Belt (Planned)
+
+**Real USDC escrow, inter-contract fee vault, CI/CD, mobile responsive.**
+
+RemitChain becomes a production-ready dApp. USDC is escrowed in a Soroban contract, protocol fees are routed to a separate FeeVault contract via an inter-contract call, and recipients withdraw earned balance on demand.
 
 ---
 
@@ -100,12 +133,13 @@ Verification of the `create_remittance` function call on the Stellar Expert expl
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 16 (App Router), TypeScript, Vanilla CSS |
+| Frontend | Next.js 16, TypeScript, Vanilla CSS |
 | Wallet | `@creit.tech/stellar-wallets-kit` (Freighter, xBull, Albedo, etc.) |
 | Stellar SDK | `@stellar/stellar-sdk`, `@stellar/freighter-api` |
-| Smart contracts | Rust, Soroban SDK (v26) |
+| Smart contracts | Rust, Soroban SDK 26 |
 | RPC | Soroban testnet RPC (`soroban-testnet.stellar.org`) |
 | Horizon | Stellar Testnet Horizon |
+| Testing | Vitest |
 | Deployment | Vercel |
 
 ---
@@ -113,7 +147,8 @@ Verification of the `create_remittance` function call on the Stellar Expert expl
 ## Local Setup
 
 ```bash
-cd frontend
+git clone https://github.com/tanaygt/RemitChain
+cd RemitChain/frontend
 npm install
 npm run dev
 ```
