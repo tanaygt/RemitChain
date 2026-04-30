@@ -262,7 +262,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-6 p-4 sm:p-6 lg:grid-cols-[280px_1fr] xl:grid-cols-[300px_1fr_320px]">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 p-4 sm:p-6 lg:grid-cols-[280px_1fr] xl:grid-cols-[300px_1fr_320px]">
         {/* Left Sidebar */}
         <aside className="space-y-6">
           <div className="rounded-3xl bg-primary p-6 text-white shadow-xl shadow-primary/20">
