@@ -41,6 +41,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [wallet, setWallet] = useState<WalletConnection | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [balance, setBalance] = useState('0');
   const [assets, setAssets] = useState<AssetOption[]>([]);
@@ -69,8 +70,9 @@ export default function Dashboard() {
   }, []);
 
   const refreshDashboard = useCallback(
-    async (address: string) => {
+    async (address: string, silent = false) => {
       try {
+        if (!silent) setIsRefreshing(true);
         const basePromises: Promise<unknown>[] = [
           fetchBalance(address).then(({ balance: nextBalance }) => setBalance(nextBalance)),
           fetchAccountAssets(address).then((nextAssets) => {
@@ -96,6 +98,8 @@ export default function Dashboard() {
         await Promise.all(basePromises);
       } catch (error) {
         console.error('Dashboard refresh failed:', error instanceof Error ? error.message : String(error));
+      } finally {
+        setIsRefreshing(false);
       }
     },
     [contractStatus.enabled, selectedAssetId],
@@ -210,7 +214,7 @@ export default function Dashboard() {
 
       if (result.stage === 'success') {
         setRecipients([createRecipient(1)]);
-        await refreshDashboard(wallet.address);
+        await refreshDashboard(wallet.address, true);
       }
     } catch (error) {
       setTxState({
@@ -232,7 +236,7 @@ export default function Dashboard() {
               RemitChain
             </div>
             <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Payment Tracker Dashboard
+              Payment Tracker Dashboard {isRefreshing && <span className="animate-pulse text-primary ml-2">Syncing...</span>}
             </p>
           </div>
 
