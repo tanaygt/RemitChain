@@ -12,6 +12,7 @@ import {
 import { CONTRACT_ENABLED, DEFAULT_ACTIVITY_LIMIT, NETWORK_PASSPHRASE, REMIT_CONTRACT_ID, SOROBAN_RPC_URL } from "./config";
 import { buildTxState, emptyStats, mapWalletErrorMessage } from "./remit-utils";
 import { signWithActiveWallet } from "./wallet";
+import { getCache, setCache } from "./cache";
 import type { ContractActivity, ContractStats, TxState } from "./types";
 
 const rpcServer = new rpc.Server(SOROBAN_RPC_URL);
@@ -101,6 +102,11 @@ export async function fetchContractActivity(limit = DEFAULT_ACTIVITY_LIMIT): Pro
   }
 
   try {
+    const cached = getCache<ContractActivity[]>("activity_" + REMIT_CONTRACT_ID);
+    if (cached) {
+      return cached;
+    }
+
     const latestLedgerResponse = await rpcServer.getLatestLedger();
     const latestLedger = latestLedgerResponse.sequence;
     const startLedger = Math.max(1, latestLedger - 10000);
@@ -116,7 +122,7 @@ export async function fetchContractActivity(limit = DEFAULT_ACTIVITY_LIMIT): Pro
       limit,
     });
 
-    return response.events
+    const activities = response.events
       .slice()
       .reverse()
       .map((event) => {
@@ -137,6 +143,9 @@ export async function fetchContractActivity(limit = DEFAULT_ACTIVITY_LIMIT): Pro
         };
       })
       .reverse();
+
+    setCache("activity_" + REMIT_CONTRACT_ID, activities, 30);
+    return activities;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : JSON.stringify(error);
     console.error("Failed to fetch contract activity:", errorMsg);
@@ -147,6 +156,12 @@ export async function fetchContractActivity(limit = DEFAULT_ACTIVITY_LIMIT): Pro
 export async function fetchContractStats(): Promise<ContractStats> {
   if (!CONTRACT_ENABLED) {
     return emptyStats();
+  }
+
+  const cacheKey = "stats_" + REMIT_CONTRACT_ID;
+  const cached = getCache<ContractStats>(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   try {
@@ -174,13 +189,16 @@ export async function fetchContractStats(): Promise<ContractStats> {
         : {};
     const stats = (value || {}) as Record<string, bigint | number | string>;
 
-    return {
+    const finalStats: ContractStats = {
       totalCount: Number(stats.total_count || 0),
       pendingCount: Number(stats.pending_count || 0),
       completedCount: Number(stats.completed_count || 0),
       refundedCount: Number(stats.refunded_count || 0),
       escrowedAmount: String(stats.escrowed_amount || "0"),
     };
+
+    setCache(cacheKey, finalStats, 60);
+    return finalStats;
   } catch {
     return emptyStats();
   }
