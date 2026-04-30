@@ -37,5 +37,9 @@ jobs:
         run: cargo install --locked stellar-cli --features opt
       - name: Build contracts
         run: stellar contract build
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Run contract tests
         run: cargo test
