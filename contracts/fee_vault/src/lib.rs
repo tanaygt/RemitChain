@@ -20,9 +20,12 @@ impl FeeVault {
     pub fn deposit_fees(env: Env, amount: u128) {
         // In a real app, we might check if caller is the registry
         let current: u128 = env.storage().instance().get(&TOTAL_FEES).unwrap_or(0);
-        env.storage().instance().set(&TOTAL_FEES, &(current + amount));
-        
-        env.events().publish((symbol_short!("fee"), symbol_short!("dep")), amount);
+        env.storage()
+            .instance()
+            .set(&TOTAL_FEES, &(current + amount));
+
+        env.events()
+            .publish((symbol_short!("fee"), symbol_short!("dep")), amount);
     }
 
     pub fn get_total_fees(env: Env) -> u128 {
@@ -30,6 +33,9 @@ impl FeeVault {
     }
 
     pub fn get_admin(env: Env) -> Address {
-        env.storage().instance().get(&ADMIN).expect("not initialized")
+        env.storage()
+            .instance()
+            .get(&ADMIN)
+            .expect("not initialized")
     }
 }

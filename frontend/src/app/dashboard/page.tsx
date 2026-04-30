@@ -237,8 +237,8 @@ export default function Dashboard() {
             </div>
             <div className="hidden sm:block">
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                Dashboard {isRefreshing && <span className="animate-pulse text-primary ml-2">Syncing...</span>}
-              </p>
+              Dashboard {isRefreshing && <span className="ml-2 inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" /> <span className="text-[9px] lowercase font-medium text-slate-400">updating...</span></span>}
+            </p>
             </div>
           </div>
 

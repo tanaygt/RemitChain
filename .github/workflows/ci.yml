@@ -33,9 +33,13 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
           components: rustfmt, clippy
-      - name: Install Soroban CLI
-        run: cargo install --locked stellar-cli --features opt
-      - name: Build contracts
+      - name: Install Stellar CLI
+        run: |
+          curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | sh -s -- --install-deps
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Build FeeVault contract
+        run: cargo build --manifest-path contracts/fee_vault/Cargo.toml --target wasm32v1-none --release
+      - name: Build RemitRegistry contract
         run: stellar contract build
       - name: Check formatting
         run: cargo fmt --all -- --check

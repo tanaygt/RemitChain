@@ -1,4 +1,5 @@
 #![no_std]
+#![allow(deprecated)]
 
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, symbol_short, token,
@@ -64,7 +65,7 @@ pub enum DataKey {
 }
 
 mod vault {
-    soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/fee_vault.wasm");
+    soroban_sdk::contractimport!(file = "../../target/wasm32v1-none/release/fee_vault.wasm");
 }
 
 fn read_admin(env: &Env) -> Address {
@@ -75,7 +76,11 @@ fn read_admin(env: &Env) -> Address {
 }
 
 fn next_id(env: &Env) -> u64 {
-    let id = env.storage().instance().get(&DataKey::NextId).unwrap_or(1_u64);
+    let id = env
+        .storage()
+        .instance()
+        .get(&DataKey::NextId)
+        .unwrap_or(1_u64);
     env.storage().instance().set(&DataKey::NextId, &(id + 1));
     id
 }
@@ -95,7 +100,11 @@ fn write_remittance(env: &Env, remittance: &Remittance) {
 
 fn append_sender_id(env: &Env, sender: &Address, id: u64) {
     let key = DataKey::SenderIds(sender.clone());
-    let mut ids: Vec<u64> = env.storage().persistent().get(&key).unwrap_or(Vec::new(env));
+    let mut ids: Vec<u64> = env
+        .storage()
+        .persistent()
+        .get(&key)
+        .unwrap_or(Vec::new(env));
     ids.push_back(id);
     env.storage().persistent().set(&key, &ids);
 }
@@ -124,7 +133,8 @@ impl RemitRegistryContract {
         let admin = read_admin(&env);
         admin.require_auth();
         env.storage().instance().set(&DataKey::FeeVault, &vault);
-        env.events().publish((symbol_short!("vault"), symbol_short!("set")), vault);
+        env.events()
+            .publish((symbol_short!("vault"), symbol_short!("set")), vault);
     }
 
     pub fn create_remittance(
@@ -233,7 +243,11 @@ impl RemitRegistryContract {
 
     pub fn get_sender_remittances(env: Env, sender: Address) -> Vec<Remittance> {
         let key = DataKey::SenderIds(sender.clone());
-        let ids: Vec<u64> = env.storage().persistent().get(&key).unwrap_or(Vec::new(&env));
+        let ids: Vec<u64> = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .unwrap_or(Vec::new(&env));
         let mut items = Vec::new(&env);
 
         for id in ids.iter() {
@@ -244,8 +258,12 @@ impl RemitRegistryContract {
     }
 
     pub fn get_recent(env: Env, limit: u32) -> Vec<Remittance> {
-        let next = env.storage().instance().get(&DataKey::NextId).unwrap_or(1_u64);
-        let mut current = if next > 1 { next - 1 } else { 0 };
+        let next = env
+            .storage()
+            .instance()
+            .get(&DataKey::NextId)
+            .unwrap_or(1_u64);
+        let mut current = next.saturating_sub(1);
         let mut count = 0_u32;
         let mut items = Vec::new(&env);
 
