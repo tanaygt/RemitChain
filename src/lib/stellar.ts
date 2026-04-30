@@ -9,7 +9,7 @@ import {
 
 import { HORIZON_URL, NETWORK_PASSPHRASE } from "./config";
 import { mapWalletErrorMessage } from "./remit-utils";
-import { extractSignedTransactionXdr, signWithFreighter } from "./freighter";
+import { signWithActiveWallet } from "./wallet";
 import type { AssetOption, BalanceState, PaymentRecipient, TxState } from "./types";
 
 const horizonServer = new Horizon.Server(HORIZON_URL);
@@ -211,8 +211,7 @@ export async function sendAssetPayments(params: {
     }
 
     const builtTransaction = transactionBuilder.setTimeout(60).build();
-    const signed = await signWithFreighter(builtTransaction.toXDR());
-    const signedXdr = extractSignedTransactionXdr(signed);
+    const signedXdr = await signWithActiveWallet(builtTransaction.toXDR(), params.address);
     const signedTransaction = TransactionBuilder.fromXDR(signedXdr, networkPassphrase);
     const result = await horizonServer.submitTransaction(signedTransaction);
 

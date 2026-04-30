@@ -11,7 +11,7 @@ import { Server as RpcServer } from "@stellar/stellar-sdk/rpc";
 
 import { CONTRACT_ENABLED, DEFAULT_ACTIVITY_LIMIT, NETWORK_PASSPHRASE, REMIT_CONTRACT_ID, SOROBAN_RPC_URL } from "./config";
 import { buildTxState, emptyStats, mapWalletErrorMessage } from "./remit-utils";
-import { extractSignedTransactionXdr, signWithFreighter } from "./freighter";
+import { signWithActiveWallet } from "./wallet";
 import type { ContractActivity, ContractStats, TxState } from "./types";
 
 const rpcServer = new RpcServer(SOROBAN_RPC_URL);
@@ -60,8 +60,7 @@ export async function submitContractRemittance(params: {
       .build();
 
     const prepared = await rpcServer.prepareTransaction(tx);
-    const signed = await signWithFreighter(prepared.toXDR());
-    const signedXdr = extractSignedTransactionXdr(signed);
+    const signedXdr = await signWithActiveWallet(prepared.toXDR(), params.address);
     const signedTx = TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE);
     const response = await rpcServer.sendTransaction(signedTx);
     const txResult = await rpcServer.pollTransaction(response.hash);

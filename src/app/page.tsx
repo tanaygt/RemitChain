@@ -4,30 +4,10 @@ import { Buffer } from 'buffer';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { connectFreighter } from '@/lib/freighter';
-import type { WalletConnection } from '@/lib/types';
-
-function getStoredWallet() {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  const stored = window.localStorage.getItem('remitchain_wallet');
-  if (!stored) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(stored) as Partial<WalletConnection>;
-    if (typeof parsed.address === 'string' && parsed.address) {
-      return parsed;
-    }
-  } catch {
-    window.localStorage.removeItem('remitchain_wallet');
-  }
-
-  return null;
-}
+import {
+  connectWalletKit,
+  getStoredWallet,
+} from '@/lib/wallet';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -45,21 +25,19 @@ export default function LandingPage() {
     }
   }, [router]);
 
-  async function handleConnect() {
+  async function handleConnectWallet() {
     try {
       setIsBusy(true);
       setError(null);
-      const address = await connectFreighter();
-      const connection = { id: 'freighter', name: 'Freighter', address };
-      localStorage.setItem('remitchain_wallet', JSON.stringify(connection));
+      await connectWalletKit();
       router.push('/dashboard');
     } catch (err) {
-      console.error('Connection failed:', err);
-      const message =
+      console.error('Wallet kit connection failed:', err);
+      setError(
         err instanceof Error
           ? err.message
-          : 'Failed to connect. Make sure Freighter is unlocked and set to Testnet.';
-      setError(message);
+          : 'Could not connect a supported wallet.',
+      );
     } finally {
       setIsBusy(false);
     }
@@ -67,141 +45,228 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
+      <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/85">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <div className="brand-mark">RemitChain</div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-5">
             <a
               href="#features"
               className="text-sm font-medium text-slate-600 transition-colors hover:text-primary dark:text-slate-400"
             >
               Features
             </a>
-            <button
-              onClick={handleConnect}
-              disabled={isBusy}
-              className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-primary-dark hover:shadow-lg disabled:opacity-50"
+            <a
+              href="#how-it-works"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-primary dark:text-slate-400"
             >
-              {isBusy ? 'Check Extension Popup...' : 'Connect Freighter'}
+              How It Works
+            </a>
+            <button
+              onClick={handleConnectWallet}
+              disabled={isBusy}
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition-all hover:bg-primary-dark disabled:opacity-50"
+            >
+              {isBusy ? 'Opening...' : 'Connect Wallet'}
             </button>
           </div>
         </div>
       </nav>
 
-      <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 lg:grid-cols-2 lg:py-32">
-        <div className="animate-fade-in">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-            White Belt Submission
-          </div>
-          <h1 className="mb-6 text-5xl font-bold tracking-tight leading-[1.1] lg:text-7xl">
-            Global Remittances,
-            <br />
-            <span className="text-primary">Zero Fees.</span>
-          </h1>
-          <p className="mb-10 max-w-lg text-xl leading-relaxed text-slate-600 dark:text-slate-400">
-            The first working version of RemitChain. Connect your Freighter wallet to send
-            Stellar Testnet payments with clear status and proof.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <button
-              onClick={handleConnect}
-              disabled={isBusy}
-              className="rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white transition-all hover:-translate-y-1 hover:bg-primary-dark hover:shadow-xl disabled:opacity-50"
-            >
-              {isBusy ? 'Connecting...' : 'Connect with Freighter'}
-            </button>
-            <a
-              href="#features"
-              className="rounded-xl border border-slate-200 bg-white px-8 py-4 text-lg font-bold transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
-            >
-              See How it Works
-            </a>
-          </div>
-          {error ? <p className="mt-4 font-medium text-danger">{error}</p> : null}
-        </div>
-
-        <div className="relative flex justify-center animate-fade-in">
-          <div className="glass-card relative z-10 w-full max-w-md rounded-3xl p-8 shadow-2xl">
-            <div className="mb-8 flex gap-1.5">
-              <div className="h-3 w-3 rounded-full bg-danger/50" />
-              <div className="h-3 w-3 rounded-full bg-warning/50" />
-              <div className="h-3 w-3 rounded-full bg-success/50" />
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(55,138,221,0.16),_transparent_36%),radial-gradient(circle_at_bottom_right,_rgba(29,158,117,0.14),_transparent_32%)]" />
+        <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-12 px-4 py-16 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
+          <div className="relative z-10 animate-fade-in">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-warning/25 bg-warning/10 px-3 py-1 text-xs font-bold text-warning">
+              Contract tracker in progress
             </div>
-            <div className="space-y-4">
-              <div className="h-8 w-3/4 animate-pulse rounded-md bg-slate-200 dark:bg-slate-800" />
-              <div className="h-4 w-full animate-pulse rounded-md bg-slate-100 dark:bg-slate-800/50" />
-              <div className="h-4 w-1/2 animate-pulse rounded-md bg-slate-100 dark:bg-slate-800/50" />
-              <div className="grid grid-cols-2 gap-4 pt-6">
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Fees
-                  </span>
-                  <div className="text-xl font-bold text-success">$0.00</div>
+            <h1 className="max-w-3xl text-5xl font-bold tracking-tight leading-[1.02] sm:text-6xl lg:text-7xl">
+              Multi-wallet remittance tracking on{' '}
+              <span className="text-primary">Stellar Testnet</span>
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-400 sm:text-xl">
+              RemitChain is moving beyond a single XLM transfer with wallet
+              choice, contract-backed payment records, live activity updates, and clearer
+              transaction status from wallet signature to on-chain result.
+            </p>
+
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+              <button
+                onClick={handleConnectWallet}
+                disabled={isBusy}
+                className="rounded-2xl bg-primary px-8 py-4 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-xl disabled:opacity-50"
+              >
+                {isBusy ? 'Opening wallet kit...' : 'Connect Wallet'}
+              </button>
+            </div>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              {[
+                ['Wallet choice', 'Choose from supported Stellar wallets in one connect flow'],
+                ['Contract records', 'Soroban-backed remittance tracking and status reads'],
+                ['Live sync', 'Recent contract events surfaced in the dashboard feed'],
+              ].map(([title, detail]) => (
+                <div
+                  key={title}
+                  className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70"
+                >
+                  <div className="text-sm font-bold">{title}</div>
+                  <div className="mt-2 text-sm leading-relaxed text-slate-500">{detail}</div>
                 </div>
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Speed
-                  </span>
-                  <div className="text-xl font-bold text-slate-700 dark:text-slate-300">~5s</div>
+              ))}
+            </div>
+
+            {error ? <p className="mt-5 font-medium text-danger">{error}</p> : null}
+          </div>
+
+          <div className="relative z-10 animate-fade-in">
+            <div className="relative mx-auto max-w-xl rounded-[28px] border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-bold">Realtime Payment Tracker</div>
+                  <div className="text-xs text-slate-500">Wallet to contract to activity feed</div>
+                </div>
+                <div className="rounded-full bg-success/10 px-3 py-1 text-[10px] font-bold uppercase text-success">
+                  Testnet
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+                  <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
+                    <span>Wallet lane</span>
+                    <span>Pending</span>
+                  </div>
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="h-3 w-3 rounded-full bg-primary animate-pulse" />
+                    <div className="h-2 flex-1 rounded-full bg-slate-200 dark:bg-slate-800" />
+                    <div className="h-3 w-3 rounded-full bg-warning animate-pulse" />
+                  </div>
+                  <div className="mt-3 text-sm text-slate-500">
+                    Select a wallet, sign a contract call, and watch the record settle into the
+                    feed.
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                      Supported flow
+                    </div>
+                    <div className="mt-3 text-sm font-semibold">Direct pay + tracked remittance</div>
+                    <div className="mt-2 text-sm text-slate-500">
+                      Keep a simple XLM send lane while adding a contract-backed history layer.
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                      Contract focus
+                    </div>
+                    <div className="mt-3 text-sm font-semibold">Wallets, contract, events</div>
+                    <div className="mt-2 text-sm text-slate-500">
+                      A clean path toward deployed contract proof and visible transaction status.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                        Activity sample
+                      </div>
+                      <div className="mt-2 text-sm font-semibold">
+                        created -&gt; pending -&gt; completed
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-white px-3 py-2 text-xs font-mono shadow-sm dark:bg-slate-900">
+                      ledger + events
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="absolute left-1/2 top-1/2 -z-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-[100px]" />
         </div>
       </section>
 
       <section id="features" className="mx-auto max-w-7xl px-4 py-24">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-3xl font-bold">Core Standards Implementation</h2>
-          <p className="mx-auto max-w-2xl text-slate-500">
-            Everything you need for a compliant Level 1 submission.
+        <div className="mb-14 text-center">
+          <h2 className="text-3xl font-bold">RemitChain Feature Set</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-slate-500">
+            RemitChain turns a simple payment app into a small contract-aware
+            dApp with clearer transaction lifecycle tracking.
           </p>
         </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {[
             {
-              icon: 'FW',
-              title: 'Freighter Wallet',
-              desc: 'Securely integrated industry-standard browser extension.',
+              title: 'Multi-wallet access',
+              desc: 'A single connect flow opens a Stellar wallet chooser so users can pick the wallet they want.',
             },
             {
-              icon: 'LB',
-              title: 'Live Balance',
-              desc: 'High-precision tracking with 7 decimal points.',
+              title: 'Contract write flow',
+              desc: 'Create remittance records through Soroban so the payment tracker has on-chain state to read back.',
             },
             {
-              icon: 'TN',
-              title: 'Testnet Ready',
-              desc: 'Optimized for the Stellar Testnet environment.',
+              title: 'Realtime activity',
+              desc: 'Poll Stellar RPC events and surface the most recent contract actions in a live dashboard feed.',
             },
             {
-              icon: 'TX',
-              title: 'Full Proof',
-              desc: 'Transaction hashes and direct links provided for every payment.',
+              title: 'Clear errors',
+              desc: 'Show readable handling for wallet missing, user rejection, and insufficient balance instead of vague failures.',
             },
-          ].map((feature) => (
+          ].map((feature, index) => (
             <div
               key={feature.title}
-              className="group rounded-2xl border border-slate-200 bg-white p-8 transition-all hover:border-primary/50 dark:border-slate-800 dark:bg-slate-900"
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 dark:border-slate-800 dark:bg-slate-900"
             >
-              <div className="mb-6 text-2xl font-bold text-primary transition-transform duration-300 group-hover:scale-110">
-                {feature.icon}
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
+                0{index + 1}
               </div>
-              <h3 className="mb-3 text-lg font-bold">{feature.title}</h3>
-              <p className="text-sm leading-relaxed text-slate-500">{feature.desc}</p>
+              <h3 className="text-lg font-bold">{feature.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-500">{feature.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <footer className="border-t border-slate-200 bg-white py-12 dark:border-slate-800 dark:bg-slate-900">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-4 md:flex-row">
-          <div>
-            <div className="brand-mark mb-2">RemitChain</div>
-            <p className="text-sm text-slate-500">Built for the Risein Stellar Challenge.</p>
+      <section id="how-it-works" className="border-y border-slate-200 bg-white py-24 dark:border-slate-800 dark:bg-slate-900">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="mb-14 text-center">
+            <h2 className="text-3xl font-bold">How It Works</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-slate-500">
+              The app keeps the UX simple while adding contract records and event updates behind
+              the scenes.
+            </p>
           </div>
-          <div className="text-sm text-slate-400">RemitChain. White Belt Submission.</div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {[
+              ['Connect a wallet', 'Open the wallet chooser, pick a supported Stellar wallet, and restore the connected address into the dashboard.'],
+              ['Write to the contract', 'Create a remittance record and sign the contract transaction through the connected wallet.'],
+              ['Watch activity update', 'Recent events and transaction status refresh in the dashboard so the app stays in sync with testnet state.'],
+            ].map(([title, body]) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950"
+              >
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Step</div>
+                <h3 className="mt-3 text-xl font-bold">{title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-slate-500">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className="bg-slate-50 py-10 dark:bg-slate-950">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <span className="brand-mark mr-3">RemitChain</span>
+            Contract-backed payment tracking on Stellar Testnet.
+          </div>
+          <div>Multi-wallet, contract calls, and activity sync on Stellar Testnet.</div>
         </div>
       </footer>
     </main>

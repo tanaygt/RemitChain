@@ -11,6 +11,8 @@ export type WalletConnection = {
   id: string;
   name: string;
   address: string;
+  provider?: "freighter" | "wallet-kit";
+  walletId?: string;
 };
 
 export type BalanceState = {

@@ -28,6 +28,16 @@ export function formatUsdEstimate(
 export function mapWalletErrorMessage(message: string) {
   const lowered = message.toLowerCase();
 
+  if (
+    lowered === "wallet connection failed." ||
+    lowered === "wallet connection failed" ||
+    lowered.includes("auth modal") ||
+    lowered.includes("modal closed") ||
+    lowered.includes("popup closed")
+  ) {
+    return "The wallet modal was closed or the wallet did not finish connecting.";
+  }
+
   if (lowered.includes("declined") || lowered.includes("rejected")) {
     return "The wallet request was rejected.";
   }
